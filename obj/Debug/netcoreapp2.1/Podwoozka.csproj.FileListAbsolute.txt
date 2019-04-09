@@ -1,0 +1,14 @@
+C:\Users\test\Desktop\podwoozka.net\Podwoozka\bin\Debug\netcoreapp2.1\Podwoozka.deps.json
+C:\Users\test\Desktop\podwoozka.net\Podwoozka\bin\Debug\netcoreapp2.1\Podwoozka.runtimeconfig.json
+C:\Users\test\Desktop\podwoozka.net\Podwoozka\bin\Debug\netcoreapp2.1\Podwoozka.runtimeconfig.dev.json
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\bin\Debug\netcoreapp2.1\Podwoozka.dll
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\bin\Debug\netcoreapp2.1\Podwoozka.pdb
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.csprojAssemblyReference.cache
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.csproj.CoreCompileInputs.cache
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.RazorAssemblyInfo.cache
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.RazorAssemblyInfo.cs
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.AssemblyInfoInputs.cache
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.AssemblyInfo.cs
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.RazorTargetAssemblyInfo.cache
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.dll
+c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.pdb
