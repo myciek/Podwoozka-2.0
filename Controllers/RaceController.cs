@@ -10,6 +10,7 @@ namespace RaceApi.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize]
     public class RaceController : ControllerBase
     {
         private readonly RaceContext _context;
@@ -19,16 +20,6 @@ namespace RaceApi.Controllers
         {
             _context = context;
             _authorizationService = authorizationService;
-
-
-            if (_context.RaceItems.Count() == 0)
-            {
-                // Create a new RaceItem if collection is empty,
-                // which means you can't delete all RaceItems.
-                // _context.RaceItems.Add(new RaceItem { Name = "Item1" });
-                // _context.SaveChanges();
-
-            }
         }
 
         [HttpGet]
@@ -52,6 +43,7 @@ namespace RaceApi.Controllers
         [HttpPost]
         public async Task<ActionResult<RaceItem>> PostRaceItem(RaceItem item)
         {
+            item.Owner = User.Identity.Name;
             _context.RaceItems.Add(item);
             await _context.SaveChangesAsync();
 

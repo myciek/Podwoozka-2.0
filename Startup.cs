@@ -19,6 +19,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Podwoozka.Controllers;
 
 
 namespace Podwoozka
@@ -36,16 +37,18 @@ namespace Podwoozka
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
+            services.AddDbContext<RaceContext>(x => x.UseInMemoryDatabase("TestDb"));
             services.AddDbContext<DataContext>(x => x.UseInMemoryDatabase("TestDb"));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1); ;
             services.AddAutoMapper();
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("OwnerPolicy", policy =>
+                options.AddPolicy("IsOwnerPolicy", policy =>
                     policy.Requirements.Add(new IsOwnerRequirement()));
             });
 
             services.AddSingleton<IAuthorizationHandler, RaceAuthorizationHandler>();
+            // services.AddSingleton<IAuthorizationService,>();
 
             // configure strongly typed settings objects
             var appSettingsSection = Configuration.GetSection("AppSettings");
