@@ -11563,11 +11563,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\test\\Desktop\\podwoozka.net\\Podwoozka\\Podwoozka.csproj",
+      "projectUniqueName": "C:\\Users\\test\\Desktop\\podwoozka.net\\Podwoozka\\Podwoozka.csproj",
       "projectName": "Podwoozka",
-      "projectPath": "c:\\Users\\test\\Desktop\\podwoozka.net\\Podwoozka\\Podwoozka.csproj",
+      "projectPath": "C:\\Users\\test\\Desktop\\podwoozka.net\\Podwoozka\\Podwoozka.csproj",
       "packagesPath": "C:\\Users\\test\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\test\\Desktop\\podwoozka.net\\Podwoozka\\obj\\",
+      "outputPath": "C:\\Users\\test\\Desktop\\podwoozka.net\\Podwoozka\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
