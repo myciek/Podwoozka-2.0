@@ -56,13 +56,10 @@ namespace Podwoozka
             services.Configure<AuthMessageSenderOptions>(Configuration);
 
             services.AddSingleton<IAuthorizationHandler, RaceAuthorizationHandler>();
-            services.AddIdentity<User, IdentityRole>()
-                // .AddUserStore<User>()
-                .AddDefaultTokenProviders();
 
-            // services.AddIdentity<User, IdentityRole>()
-            //     .AddEntityFrameworkStores<DataContext>()
-            //     .AddDefaultTokenProviders();
+            services.AddIdentity<IdentityUser, IdentityRole>()
+                .AddEntityFrameworkStores<DataContext>()
+                .AddDefaultTokenProviders();
 
 
 
@@ -121,7 +118,7 @@ namespace Podwoozka
                 .AllowAnyMethod()
                 .AllowAnyHeader());
 
-            app.UseAuthentication();
+            // app.UseAuthentication();
 
             app.UseMvc();
         }

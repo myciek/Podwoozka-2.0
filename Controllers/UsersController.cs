@@ -28,7 +28,7 @@ namespace Podwoozka.Controllers
         private IMapper _mapper;
         private readonly AppSettings _appSettings;
         private readonly IAuthorizationService _authorizationService;
-        private readonly UserManager<User> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
 
         private readonly IEmailSender _emailSender;
 
@@ -37,7 +37,7 @@ namespace Podwoozka.Controllers
             IMapper mapper,
             IOptions<AppSettings> appSettings,
             IAuthorizationService authorizationService,
-            UserManager<User> userManager,
+            UserManager<IdentityUser> userManager,
             IEmailSender emailSender)
         {
             _userService = userService;
@@ -88,21 +88,23 @@ namespace Podwoozka.Controllers
         public IActionResult Register([FromBody]UserDto userDto)
         {
             // map dto to entity
-            var user = _mapper.Map<User>(userDto);
-            var code = _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = Url.Page(
-                        "/users/confirm",
-                        pageHandler: null,
-                        values: new { userId = user.Id, code = code },
-                        protocol: Request.Scheme);
-            _emailSender.SendEmailAsync(user.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-
+            var userN = _mapper.Map<User>(userDto);
+            if (userN.Email != null)
+            {
+                var user = new IdentityUser { UserName = userN.Email, Email = userN.Email };
+                var code = _userManager.GenerateEmailConfirmationTokenAsync(user);
+                string url = "https://localhost:5001/users/confirm/" + code.Result;
+                _emailSender.SendEmailAsync(user.Email, "Confirm your email",
+                            $"Please confirm your account by <a href='{url}'>clicking here</a>.");
+            }
+            else
+            {
+                //TODO
+            }
             try
             {
                 // save 
-                _userService.Create(user, userDto.Password);
+                _userService.Create(userN, userDto.Password);
                 return Ok();
             }
             catch (AppException ex)
@@ -111,6 +113,7 @@ namespace Podwoozka.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
 
         [HttpGet]
         public IActionResult GetAll()
