@@ -11,15 +11,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
-using Podwoozka.Models;
 using Podwoozka.Helpers;
 using Podwoozka.Services;
+using Podwoozka.Controllers;
+using Podwoozka.Entities;
 using AutoMapper;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Podwoozka.Controllers;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+
 
 
 namespace Podwoozka
@@ -47,8 +51,17 @@ namespace Podwoozka
                     policy.Requirements.Add(new IsOwnerRequirement()));
             });
 
+            services.Configure<AuthMessageSenderOptions>(Configuration);
+            services.AddTransient<IEmailSender, EmailSender>();
+            services.Configure<AuthMessageSenderOptions>(Configuration);
+
             services.AddSingleton<IAuthorizationHandler, RaceAuthorizationHandler>();
-            // services.AddSingleton<IAuthorizationService,>();
+
+            services.AddIdentity<IdentityUser, IdentityRole>()
+                .AddEntityFrameworkStores<DataContext>()
+                .AddDefaultTokenProviders();
+
+
 
             // configure strongly typed settings objects
             var appSettingsSection = Configuration.GetSection("AppSettings");
@@ -79,6 +92,8 @@ namespace Podwoozka
                         return Task.CompletedTask;
                     }
                 };
+
+
                 x.RequireHttpsMetadata = false;
                 x.SaveToken = true;
                 x.TokenValidationParameters = new TokenValidationParameters
@@ -103,7 +118,7 @@ namespace Podwoozka
                 .AllowAnyMethod()
                 .AllowAnyHeader());
 
-            app.UseAuthentication();
+            // app.UseAuthentication();
 
             app.UseMvc();
         }

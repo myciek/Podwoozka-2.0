@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
-using Podwoozka.Models;
+using Podwoozka.Entities;
 using System.Threading.Tasks;
 
 namespace Podwoozka.Services

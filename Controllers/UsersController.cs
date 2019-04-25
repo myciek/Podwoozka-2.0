@@ -9,9 +9,13 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Identity;
 using Podwoozka.Services;
 using Podwoozka.Dtos;
 using Podwoozka.Entities;
+using System.Text.Encodings.Web;
+
 
 namespace Podwoozka.Controllers
 {
@@ -24,17 +28,24 @@ namespace Podwoozka.Controllers
         private IMapper _mapper;
         private readonly AppSettings _appSettings;
         private readonly IAuthorizationService _authorizationService;
+        private readonly UserManager<IdentityUser> _userManager;
+
+        private readonly IEmailSender _emailSender;
 
         public UsersController(
             IUserService userService,
             IMapper mapper,
             IOptions<AppSettings> appSettings,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            UserManager<IdentityUser> userManager,
+            IEmailSender emailSender)
         {
             _userService = userService;
             _mapper = mapper;
             _appSettings = appSettings.Value;
             _authorizationService = authorizationService;
+            _userManager = userManager;
+            _emailSender = emailSender;
 
         }
 
@@ -77,12 +88,23 @@ namespace Podwoozka.Controllers
         public IActionResult Register([FromBody]UserDto userDto)
         {
             // map dto to entity
-            var user = _mapper.Map<User>(userDto);
-
+            var userN = _mapper.Map<User>(userDto);
+            if (userN.Email != null)
+            {
+                var user = new IdentityUser { UserName = userN.Email, Email = userN.Email };
+                var code = _userManager.GenerateEmailConfirmationTokenAsync(user);
+                string url = "https://localhost:5001/users/confirm/" + code.Result;
+                _emailSender.SendEmailAsync(user.Email, "Confirm your email",
+                            $"Please confirm your account by <a href='{url}'>clicking here</a>.");
+            }
+            else
+            {
+                //TODO
+            }
             try
             {
                 // save 
-                _userService.Create(user, userDto.Password);
+                _userService.Create(userN, userDto.Password);
                 return Ok();
             }
             catch (AppException ex)
@@ -91,6 +113,7 @@ namespace Podwoozka.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
 
         [HttpGet]
         public IActionResult GetAll()
