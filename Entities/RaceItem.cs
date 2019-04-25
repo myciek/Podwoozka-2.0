@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Podwoozka.Entities;
-namespace Podwoozka.Models
+namespace Podwoozka.Entities
 {
     public class RaceItem
     {

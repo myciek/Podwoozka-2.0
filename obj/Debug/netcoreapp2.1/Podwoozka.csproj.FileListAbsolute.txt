@@ -12,3 +12,4 @@ c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.
 c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.RazorTargetAssemblyInfo.cache
 c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.dll
 c:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\Podwoozka.pdb
+C:\Users\test\Desktop\podwoozka.net\Podwoozka\obj\Debug\netcoreapp2.1\UserSecretsAssemblyInfo.cs

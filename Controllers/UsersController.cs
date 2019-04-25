@@ -9,9 +9,13 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Identity;
 using Podwoozka.Services;
 using Podwoozka.Dtos;
 using Podwoozka.Entities;
+using System.Text.Encodings.Web;
+
 
 namespace Podwoozka.Controllers
 {
@@ -24,17 +28,24 @@ namespace Podwoozka.Controllers
         private IMapper _mapper;
         private readonly AppSettings _appSettings;
         private readonly IAuthorizationService _authorizationService;
+        private readonly UserManager<User> _userManager;
+
+        private readonly IEmailSender _emailSender;
 
         public UsersController(
             IUserService userService,
             IMapper mapper,
             IOptions<AppSettings> appSettings,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            UserManager<User> userManager,
+            IEmailSender emailSender)
         {
             _userService = userService;
             _mapper = mapper;
             _appSettings = appSettings.Value;
             _authorizationService = authorizationService;
+            _userManager = userManager;
+            _emailSender = emailSender;
 
         }
 
@@ -78,6 +89,15 @@ namespace Podwoozka.Controllers
         {
             // map dto to entity
             var user = _mapper.Map<User>(userDto);
+            var code = _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var callbackUrl = Url.Page(
+                        "/users/confirm",
+                        pageHandler: null,
+                        values: new { userId = user.Id, code = code },
+                        protocol: Request.Scheme);
+            _emailSender.SendEmailAsync(user.Email, "Confirm your email",
+                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
 
             try
             {

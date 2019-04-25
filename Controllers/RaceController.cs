@@ -15,10 +15,10 @@ using Podwoozka.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
-using Podwoozka.Models;
 
 
-namespace RaceApi.Controllers
+
+namespace Podwoozka.Controllers
 {
     [Route("[controller]")]
     [ApiController]

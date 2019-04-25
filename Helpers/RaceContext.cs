@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
-namespace Podwoozka.Models
+using Podwoozka.Entities;
+namespace Podwoozka.Helpers
 {
     public class RaceContext : DbContext
     {
