@@ -58,6 +58,11 @@ namespace Podwoozka.Controllers
             if (user == null)
                 return BadRequest(new { message = "Username or password is incorrect" });
 
+            if (user.IsConfirmed == false)
+            {
+                return BadRequest(new { message = "Your account is not acitaved. Check your email(TAK EMAIL, SERIO DZIALA) " });
+            }
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -88,12 +93,20 @@ namespace Podwoozka.Controllers
         public IActionResult Register([FromBody]UserDto userDto)
         {
             // map dto to entity
-            var userN = _mapper.Map<User>(userDto);
-            if (userN.Email != null)
+            var user = _mapper.Map<User>(userDto);
+            if (user.Email != null)
             {
-                var user = new IdentityUser { UserName = userN.Email, Email = userN.Email };
                 var code = _userManager.GenerateEmailConfirmationTokenAsync(user);
-                string url = "https://localhost:5001/users/confirm/" + code.Result;
+
+                // var callbackUrl = Url.Page(
+                //     "/Account/ConfirmEmail",
+                //     pageHandler: null,
+                //     values: new { userId = user.Id, code = code },
+                //     protocol: Request.Scheme);
+
+                // _emailSender.SendEmailAsync(user.Email, "Confirm your email",
+                //    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                string url = "https://localhost:5001/users/confirm/" + user.Id + "/" + code.Result;
                 _emailSender.SendEmailAsync(user.Email, "Confirm your email",
                             $"Please confirm your account by <a href='{url}'>clicking here</a>.");
             }
@@ -104,7 +117,8 @@ namespace Podwoozka.Controllers
             try
             {
                 // save 
-                _userService.Create(userN, userDto.Password);
+                user.IsConfirmed = false;
+                _userService.Create(user, userDto.Password);
                 return Ok();
             }
             catch (AppException ex)
@@ -113,6 +127,27 @@ namespace Podwoozka.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+
+        [HttpPost("confirm/{id}/{code}")]
+        [AllowAnonymous]
+        public IActionResult Confirm(string id, string code)
+        {
+            if (code == null || id == null)
+            {
+                return BadRequest("Błędny kod aktywacyjny");
+            }
+            var user = _userService.GetById(int.Parse(id));
+            if (user == null)
+            {
+                return BadRequest("Uzytkownik nie istnieje");
+            }
+            var result = _userManager.ConfirmEmailAsync(user, code);
+            return Ok(result);
+
+        }
+
+
 
 
         [HttpGet]
@@ -152,12 +187,13 @@ namespace Podwoozka.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-        // [Authorize(Policy = "OwnerAuthorization")]
+
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
             _userService.Delete(id);
             return Ok();
         }
+
     }
 }
