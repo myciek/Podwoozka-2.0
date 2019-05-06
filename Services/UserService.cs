@@ -11,6 +11,7 @@ namespace Podwoozka.Services
         User Authenticate(string username, string password);
         IEnumerable<User> GetAll();
         User GetById(int id);
+        User GetByUsername(string name);
         User Create(User user, string password);
         void Update(User user, string password = null);
         void Delete(int id);
@@ -30,7 +31,7 @@ namespace Podwoozka.Services
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return null;
 
-            var user = _context.Users.SingleOrDefault(x => x.Username == username);
+            var user = _context.Users.SingleOrDefault(x => x.UserName == username);
 
             // check if username exists
             if (user == null)
@@ -54,14 +55,19 @@ namespace Podwoozka.Services
             return _context.Users.Find(id);
         }
 
+        public User GetByUsername(string name)
+        {
+            return _context.Users.FirstOrDefault(acc => acc.UserName == name);
+        }
+
         public User Create(User user, string password)
         {
             // validation
             if (string.IsNullOrWhiteSpace(password))
                 throw new AppException("Password is required");
 
-            if (_context.Users.Any(x => x.Username == user.Username))
-                throw new AppException("Username \"" + user.Username + "\" is already taken");
+            if (_context.Users.Any(x => x.UserName == user.UserName))
+                throw new AppException("UserName \"" + user.UserName + "\" is already taken");
 
             byte[] passwordHash, passwordSalt;
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
@@ -82,17 +88,17 @@ namespace Podwoozka.Services
             if (user == null)
                 throw new AppException("User not found");
 
-            if (userParam.Username != user.Username)
+            if (userParam.UserName != user.UserName)
             {
                 // username has changed so check if the new username is already taken
-                if (_context.Users.Any(x => x.Username == userParam.Username))
-                    throw new AppException("Username " + userParam.Username + " is already taken");
+                if (_context.Users.Any(x => x.UserName == userParam.UserName))
+                    throw new AppException("UserName " + userParam.UserName + " is already taken");
             }
 
             // update user properties
             user.FirstName = userParam.FirstName;
             user.LastName = userParam.LastName;
-            user.Username = userParam.Username;
+            user.UserName = userParam.UserName;
 
             // update password if it was entered
             if (!string.IsNullOrWhiteSpace(password))

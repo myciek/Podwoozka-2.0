@@ -45,5 +45,6 @@
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="2.2.0"/>
     <PackageReference Include="Microsoft.Extensions.WebEncoders" Version="2.2.0"/>
     <PackageReference Include="Microsoft.Net.Http.Headers" Version="2.2.0"/>
+    <PackageReference Include="System.Text.Encoding" Version="4.3.0"/>
   </ItemGroup>
 </Project>

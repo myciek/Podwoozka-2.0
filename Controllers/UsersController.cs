@@ -15,6 +15,8 @@ using Podwoozka.Services;
 using Podwoozka.Dtos;
 using Podwoozka.Entities;
 using System.Text.Encodings.Web;
+using System.Threading.Tasks;
+using System.Web;
 
 
 namespace Podwoozka.Controllers
@@ -53,10 +55,10 @@ namespace Podwoozka.Controllers
         [HttpPost("authenticate")]
         public IActionResult Authenticate([FromBody]UserDto userDto)
         {
-            var user = _userService.Authenticate(userDto.Username, userDto.Password);
+            var user = _userService.Authenticate(userDto.UserName, userDto.Password);
 
             if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+                return BadRequest(new { message = "UserName or password is incorrect" });
 
             if (user.IsConfirmed == false)
             {
@@ -81,7 +83,7 @@ namespace Podwoozka.Controllers
             return Ok(new
             {
                 Id = user.Id,
-                Username = user.Username,
+                UserName = user.UserName,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Token = tokenString
@@ -94,32 +96,29 @@ namespace Podwoozka.Controllers
         {
             // map dto to entity
             var user = _mapper.Map<User>(userDto);
-            if (user.Email != null)
-            {
-                var code = _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                // var callbackUrl = Url.Page(
-                //     "/Account/ConfirmEmail",
-                //     pageHandler: null,
-                //     values: new { userId = user.Id, code = code },
-                //     protocol: Request.Scheme);
-
-                // _emailSender.SendEmailAsync(user.Email, "Confirm your email",
-                //    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-                string url = "https://localhost:5001/users/confirm/" + user.Id + "/" + code.Result;
-                _emailSender.SendEmailAsync(user.Email, "Confirm your email",
-                            $"Please confirm your account by <a href='{url}'>clicking here</a>.");
-            }
-            else
-            {
-                //TODO
-            }
             try
             {
                 // save 
                 user.IsConfirmed = false;
+                _userManager.UpdateSecurityStampAsync(user);
                 _userService.Create(user, userDto.Password);
-                return Ok();
+                if (user.Email != null)
+                {
+                    var userCreated = _userService.GetByUsername(user.UserName);
+                    var code = _userManager.GenerateEmailConfirmationTokenAsync(userCreated);
+                    var codeHtmlVersion = HttpUtility.UrlEncode(code.Result);
+                    string url = "https://localhost:5001/users/confirm?name=" + user.UserName + "&code=" + codeHtmlVersion;
+                    _emailSender.SendEmailAsync(user.Email, "Confirm your email",
+                                $"Please confirm your account by <a href='{url}'>clicking here</a>.");
+                }
+                else
+                {
+                    //TODO
+                }
+
+
+                return Ok(userDto);
             }
             catch (AppException ex)
             {
@@ -129,20 +128,22 @@ namespace Podwoozka.Controllers
         }
 
 
-        [HttpPost("confirm/{id}/{code}")]
+        [HttpGet("confirm")]
         [AllowAnonymous]
-        public IActionResult Confirm(string id, string code)
+        public async Task<IActionResult> Confirm(string name, string code)
         {
-            if (code == null || id == null)
+            if (code == null || name == null)
             {
                 return BadRequest("Błędny kod aktywacyjny");
             }
-            var user = _userService.GetById(int.Parse(id));
+            var user = _userService.GetByUsername(name);
             if (user == null)
             {
                 return BadRequest("Uzytkownik nie istnieje");
             }
-            var result = _userManager.ConfirmEmailAsync(user, code);
+            var codeHtmlDecoded = HttpUtility.UrlDecode(code);
+            var codeWithoutSpaces = codeHtmlDecoded.Replace(' ', '+');
+            var result = await _userManager.ConfirmEmailAsync(user, codeWithoutSpaces);
             return Ok(result);
 
         }
@@ -151,6 +152,8 @@ namespace Podwoozka.Controllers
 
 
         [HttpGet]
+        [AllowAnonymous]
+
         public IActionResult GetAll()
         {
             var users = _userService.GetAll();
