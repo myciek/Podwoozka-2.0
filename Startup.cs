@@ -57,7 +57,7 @@ namespace Podwoozka
 
             services.AddSingleton<IAuthorizationHandler, RaceAuthorizationHandler>();
 
-            services.AddIdentity<IdentityUser, IdentityRole>()
+            services.AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<DataContext>()
                 .AddDefaultTokenProviders();
 
@@ -82,7 +82,7 @@ namespace Podwoozka
                     OnTokenValidated = context =>
                     {
                         var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
-                        var userId = int.Parse(context.Principal.Identity.Name);
+                        var userId = context.Principal.Identity.Name;
                         var user = userService.GetById(userId);
                         if (user == null)
                         {

@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using Podwoozka.Entities;
 using Podwoozka.Helpers;
-
+using System.Text;
 namespace Podwoozka.Services
 {
     public interface IUserService
     {
         User Authenticate(string username, string password);
         IEnumerable<User> GetAll();
-        User GetById(int id);
+        User GetById(string id);
         User GetByUsername(string name);
         User Create(User user, string password);
         void Update(User user, string password = null);
-        void Delete(int id);
+        void Delete(string id);
+
+        void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt);
     }
 
     public class UserService : IUserService
@@ -37,6 +39,7 @@ namespace Podwoozka.Services
             if (user == null)
                 return null;
 
+            // byte[] array = Encoding.ASCII.GetBytes(user.PasswordHash);
             // check if password is correct
             if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 return null;
@@ -50,7 +53,7 @@ namespace Podwoozka.Services
             return _context.Users;
         }
 
-        public User GetById(int id)
+        public User GetById(string id)
         {
             return _context.Users.Find(id);
         }
@@ -73,6 +76,7 @@ namespace Podwoozka.Services
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
 
             user.PasswordHash = passwordHash;
+            //user.PasswordHash = ASCIIEncoding.ASCII.GetString(passwordHash);
             user.PasswordSalt = passwordSalt;
 
             _context.Users.Add(user);
@@ -105,8 +109,8 @@ namespace Podwoozka.Services
             {
                 byte[] passwordHash, passwordSalt;
                 CreatePasswordHash(password, out passwordHash, out passwordSalt);
-
                 user.PasswordHash = passwordHash;
+                // user.PasswordHash = ASCIIEncoding.ASCII.GetString(passwordHash); ;
                 user.PasswordSalt = passwordSalt;
             }
 
@@ -114,7 +118,7 @@ namespace Podwoozka.Services
             _context.SaveChanges();
         }
 
-        public void Delete(int id)
+        public void Delete(string id)
         {
             var user = _context.Users.Find(id);
             if (user != null)
@@ -126,7 +130,7 @@ namespace Podwoozka.Services
 
         // private helper methods
 
-        private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        public void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             if (password == null) throw new ArgumentNullException("password");
             if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Value cannot be empty or whitespace only string.", "password");

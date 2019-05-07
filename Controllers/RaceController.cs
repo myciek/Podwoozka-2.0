@@ -22,7 +22,7 @@ namespace Podwoozka.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize]
+
     public class RaceController : ControllerBase
     {
         private readonly RaceContext _context;
