@@ -15,6 +15,9 @@ using Podwoozka.Services;
 using Podwoozka.Dtos;
 using Podwoozka.Entities;
 using System.Text.Encodings.Web;
+using System.Threading.Tasks;
+using System.Web;
+
 
 
 namespace Podwoozka.Controllers
@@ -28,7 +31,7 @@ namespace Podwoozka.Controllers
         private IMapper _mapper;
         private readonly AppSettings _appSettings;
         private readonly IAuthorizationService _authorizationService;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
 
         private readonly IEmailSender _emailSender;
 
@@ -37,7 +40,7 @@ namespace Podwoozka.Controllers
             IMapper mapper,
             IOptions<AppSettings> appSettings,
             IAuthorizationService authorizationService,
-            UserManager<IdentityUser> userManager,
+            UserManager<User> userManager,
             IEmailSender emailSender)
         {
             _userService = userService;
@@ -53,10 +56,10 @@ namespace Podwoozka.Controllers
         [HttpPost("authenticate")]
         public IActionResult Authenticate([FromBody]UserDto userDto)
         {
-            var user = _userService.Authenticate(userDto.Username, userDto.Password);
+            var user = _userService.Authenticate(userDto.UserName, userDto.Password);
 
             if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+                return BadRequest(new { message = "UserName or password is incorrect" });
 
             if (user.IsConfirmed == false)
             {
@@ -81,7 +84,7 @@ namespace Podwoozka.Controllers
             return Ok(new
             {
                 Id = user.Id,
-                Username = user.Username,
+                UserName = user.UserName,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Token = tokenString
@@ -90,60 +93,70 @@ namespace Podwoozka.Controllers
 
         [AllowAnonymous]
         [HttpPost("register")]
-        public IActionResult Register([FromBody]UserDto userDto)
+        public async Task<IActionResult> Register([FromBody]UserDto userDto)
         {
             // map dto to entity
             var user = _mapper.Map<User>(userDto);
-            if (user.Email != null)
-            {
-                var code = _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                // var callbackUrl = Url.Page(
-                //     "/Account/ConfirmEmail",
-                //     pageHandler: null,
-                //     values: new { userId = user.Id, code = code },
-                //     protocol: Request.Scheme);
+            var result = await _userManager.CreateAsync(user, userDto.Password);
 
-                // _emailSender.SendEmailAsync(user.Email, "Confirm your email",
-                //    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-                string url = "https://localhost:5001/users/confirm/" + user.Id + "/" + code.Result;
-                _emailSender.SendEmailAsync(user.Email, "Confirm your email",
-                            $"Please confirm your account by <a href='{url}'>clicking here</a>.");
-            }
-            else
+            byte[] passwordHash, passwordSalt;
+            _userService.CreatePasswordHash(userDto.Password, out passwordHash, out passwordSalt);
+            user.PasswordHash = passwordHash;
+            //user.PasswordHash = ASCIIEncoding.ASCII.GetString(passwordHash);
+            user.PasswordSalt = passwordSalt;
+            _userService.Update(user, userDto.Password);
+
+            if (result.Succeeded)
             {
-                //TODO
+
+                if (user.Email != null)
+                {
+                    var userCreated = _userService.GetByUsername(user.UserName);
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var codeHtmlVersion = HttpUtility.UrlEncode(code);
+                    var link = Url.Action("Confirm", "users", new { id = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+                    await _emailSender.SendEmailAsync(user.Email, "Confirm your email",
+                                $"Please confirm your account by <a href='{link}'>clicking here</a>.");
+                }
+                else
+                {
+                    //TODO
+                }
+
+                var userDtoOut = _mapper.Map<UserDto>(user);
+                return Ok(userDtoOut);
             }
-            try
-            {
-                // save 
-                user.IsConfirmed = false;
-                _userService.Create(user, userDto.Password);
-                return Ok();
-            }
-            catch (AppException ex)
-            {
-                // return error message if there was an exception
-                return BadRequest(new { message = ex.Message });
-            }
+            return BadRequest(result);
         }
 
 
-        [HttpPost("confirm/{id}/{code}")]
+        [HttpGet("confirm")]
         [AllowAnonymous]
-        public IActionResult Confirm(string id, string code)
+        public async Task<IActionResult> Confirm(string id, string code)
         {
             if (code == null || id == null)
             {
                 return BadRequest("Błędny kod aktywacyjny");
             }
-            var user = _userService.GetById(int.Parse(id));
+            var user = _userService.GetById(id);
             if (user == null)
             {
                 return BadRequest("Uzytkownik nie istnieje");
             }
-            var result = _userManager.ConfirmEmailAsync(user, code);
-            return Ok(result);
+            // var codeHtmlDecoded = HttpUtility.UrlDecode(code);
+            // var codeWithoutSpaces = codeHtmlDecoded.Replace(' ', '+');
+            var result = await _userManager.ConfirmEmailAsync(user, code);
+            if (result.Succeeded)
+            {
+                user.IsConfirmed = true;
+                _userService.Update(user);
+                return Ok(result);
+
+
+            }
+            else
+                return BadRequest("Bledny kod");
 
         }
 
@@ -151,6 +164,8 @@ namespace Podwoozka.Controllers
 
 
         [HttpGet]
+        [AllowAnonymous]
+
         public IActionResult GetAll()
         {
             var users = _userService.GetAll();
@@ -159,7 +174,7 @@ namespace Podwoozka.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public IActionResult GetById(string id)
         {
             var user = _userService.GetById(id);
             var userDto = _mapper.Map<UserDto>(user);
@@ -168,12 +183,12 @@ namespace Podwoozka.Controllers
 
 
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody]UserDto userDto)
+        public IActionResult Update(string id, [FromBody]UserDto userDto)
         {
 
             // map dto to entity and set id
             var user = _mapper.Map<User>(userDto);
-            user.Id = id;
+            user.Id = id.ToString();
 
             try
             {
@@ -189,7 +204,7 @@ namespace Podwoozka.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(string id)
         {
             _userService.Delete(id);
             return Ok();
