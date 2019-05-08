@@ -20,9 +20,9 @@ using System.Threading.Tasks;
 
 namespace Podwoozka.Controllers
 {
-    [Route("[controller]")]
+    [Authorize]
     [ApiController]
-
+    [Route("[controller]")]
     public class RaceController : ControllerBase
     {
         private readonly RaceContext _context;
