@@ -164,7 +164,6 @@ namespace Podwoozka.Controllers
 
 
         [HttpGet]
-        [AllowAnonymous]
 
         public IActionResult GetAll()
         {

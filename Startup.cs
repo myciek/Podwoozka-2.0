@@ -118,7 +118,7 @@ namespace Podwoozka
                 .AllowAnyMethod()
                 .AllowAnyHeader());
 
-            // app.UseAuthentication();
+            app.UseAuthentication();
 
             app.UseMvc();
         }
